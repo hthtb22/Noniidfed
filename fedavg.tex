@@ -82,42 +82,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
-	\section*{Report}
-	
-		\begin{tabular}{ | m{7em} | m{6.5cm}|  }  
-			\hline
-			Project & \textbf{Convergence guarantees for gradient descent methods on optimization for non-convex function approximation} \\
-			\hline
-			Student & \textbf{Hoang Trung Hieu}\\
-			\hline 
-			Supervisor & \textbf{Horváth Tomáš} \\
-			\hline
-			 Program & MSc, Applied Mathematics \\
-			\hline			
-			Semester & 2020/2021, Autumn \\
-			\hline
-		\end{tabular}
-	\subsection*{Summary}
-	\subsection*{Process and Results}
-	- 
-	\subsection*{Future work}
-	\subsection*{}
-	\begin{thebibliography}{5}
-		
-		
-		\bibitem{cite1}
-		F. Sattler, S. Wiedemann, K. Müller, W. Samek,  (2019), \textit{Robust and communication-efficient federated learning from non-iid data},IEEE transactions on neural networks and learning systems,
-		\bibitem{cite2}
-		H. Brendan McMahan, Eider Moore, Daniel Ramage, (2017)  \textit{Communication-Efficient Learning of Deep Networks
-			from Decentralized Data}, \href{https://arxiv.org/abs/1602.05629}{https://arxiv.org/abs/1602.05629}  
-		\bibitem{cite3}
-		\textit{TensorFlow Federated},\href{ https://github.com/tensorflow/federated }{https://github.com/tensorflow/federated}
-		\bibitem{cite4}
-	\textit{Advanced Machine Learning Systems Course} , (2017),  \href{https://www.cs.cornell.edu/courses/cs6787/2017fa/}{https://www.cs.cornell.edu/courses/cs6787/2017fa/}	
-		\bibitem{cite4}
-		X. Li, K. Huang, W. Yang, S. Wang, Z. Zhang, (2019)  \textit{On the Convergence of FedAvg on Non-IID Data}, \href{https://arxiv.org/abs/1907.02189}{https://arxiv.org/abs/1907.02189}
-		
-	\end{thebibliography}
+
 	\newpage
 	\title{Non-convex optimization in federated learning}
 	
@@ -131,7 +96,7 @@
 	
 	\noindent
 	\begin{abstract}
-		abstract-text
+		Federated learning (FL) is a learning paradigm seeking to address the problem of data governance and privacy by training algorithms collaboratively without exchanging the data itself. But there are some limitations: Massively distributed, non-iid dataset, the data distribution's unbalancedness. To train a neural network in general we often use the gradient decent methods to optimize the loss function. In FL, Federated Averaging(FedAvg) is used most frequently. However, it is not perfect and it performs poor-quality in some cases. My project is to analyze whether it is possible to give convergence guarantees in case the data over each devices is unbiased and evaluating of divergence between local datasets.
 	\end{abstract}
 	\section{Introduction}
 	\subsection{Federated Learning}
@@ -183,7 +148,7 @@ Deep learning training mainly relies on variants of stochastic gradient descent,
 Federated stochastic gradient descent[13] is the direct transposition of this algorithm to the federated setting, but by using a random fraction C of the nodes and using all the data on this node. The gradients are averaged by the server proportionally to the number of training samples on each node, and used to make a gradient descent step.
 
 	\subsection{FedAvg}
-	
+Federated averaging (FedAvg) is a generalization of FedSGD, which allows local nodes to perform more than one batch update on local data and exchanges the updated weights rather than the gradients. The rationale behind this generalization is that in FedSGD, if all local nodes start from the same initialization, averaging the gradients is strictly equivalent to averaging the weights themselves. Further, averaging tuned weights coming from the same initialization does not necessarily hurt the resulting averaged model's performance.	
 	\begin{algorithm}[H]
 		\SetAlgoLined
 		\textbf{Server executes:} \\
@@ -204,7 +169,7 @@ Federated stochastic gradient descent[13] is the direct transposition of this al
 	$ w \leftarrow w - \eta \nabla \l(w;b)$ }}
 		\caption{FederatedAveraging(FedAvg).}
 	\end{algorithm}
-Federated averaging (FedAvg) is a generalization of FedSGD, which allows local nodes to perform more than one batch update on local data and exchanges the updated weights rather than the gradients. The rationale behind this generalization is that in FedSGD, if all local nodes start from the same initialization, averaging the gradients is strictly equivalent to averaging the weights themselves. Further, averaging tuned weights coming from the same initialization does not necessarily hurt the resulting averaged model's performance.
+
 	\section{Non-Convex optimization}
 Machine learning algorithms use optimization all the time. We minimize loss, or error, or maximize some kind of score functions. Gradient descent is the "hello world" optimization algorithm covered on probably any machine learning course. It is obvious in the case of regression, or classification models, but even with tasks such as clustering we are looking for a solution that optimally fits our data (e.g. k-means minimizes the within-cluster sum of squares). So if you want to understand how the machine learning algorithms do work, learning more about optimization helps. Moreover, if you need to do things like hyperparameter tuning, then you are also directly using optimization.
 
@@ -215,63 +180,92 @@ In order to find convergence guarantees for non-convex function(even convex) is 
 		Or it can be rewritten: $$f_i(u) \le f_i(v)+(u-v)^{T} \nabla f_i(v)+\frac{L}{2} \|u-v\|^2$$
 	\end{assumption}
 	\begin{assumption}
-		\textbf{Bounded variance} $$\E _{\xi_k \sim D_i} \left[\| \nabla \| ^2\right] \le ^2 $$
+		\textbf{Bounded variance} $$\E _{\xi_k \sim D_i} \left[\| \nabla F(w, \xi_k)-\nabla f_k(w)\| ^2\right] \le\sigma ^2, \ \forall k,w $$
 	\end{assumption}
 \begin{assumption}
-	\textbf{Bounded gradient} $$\E _{\xi_k \sim D_i} \left[\| \nabla \| ^2\right] \le ^2 $$
+	\textbf{Bounded gradient} $$\E _{\xi_k \sim D_i} \left[\| \nabla F(w, \xi_k)\| ^2\right] \le G^2, \ \forall k,w $$
 \end{assumption}
-\begin{assumption}
-	\textbf{Bounded variance} $$\E  $$
-\end{assumption}
-Besides, to analysing a limitation of FL, other limitations usually are not counted. In \cite{}When the gradients of the loss function over our function approximator (NN) are unbiased, there are already convergence analyses given. In FL however, local gradients are computed over different data distributions and the updates aggregated from them are biased, which makes this analysis very hard. (To the best of our knowledge, nobody gave any meaningful results for this problem)
+ My project is to analyze whether it is possible to give convergence guarantees in case the data over each devices is unbiased and non-iid. I believe that we need to modify the FedAvg if it guarantees the convergence in non-convex problem. In\cite{cite5}, they analyze the convergence of FedAvg on non-iid data and establish a convergence for strongly convex and smooth problems.
  
 \section{Experimental results}
-In most cases, the assumption of independent and identically distributed samples across local nodes does not hold for federated learning setups. Under this setting, the performances of the training process may vary significantly according to the unbalancedness of local data samples as well as the particular probability distribution of the training examples (i.e., features and labels) stored at the local nodes. To further investigate the effects of non-iid data, the following description considers the main categories presented in the by Peter Kiarouz and al. in 2019.
-
-Federated learning parameters
-Once the topology of the node network is chosen, one can control different parameters of the federated learning process (in opposition to the machine learning model's own hyperparameters) to optimize learning:
-
-Number of federated learning rounds:T\\
+In most cases, the assumption of independent and identically distributed samples across local nodes does not hold for federated learning setups. Under this setting, the performances of the training process may vary significantly according to the unbalancedness of local data samples as well as the particular probability distribution of the training examples (i.e., features and labels) stored at the local nodes.\\
+\textbf{Models.} The models we use in experimental part are: 2NN and CNN.
+The 2NN model is a deep neural network with 2 hidden layer.\\
+(fc1): Linear( input features=784, output features=200, bias=True)\\
+(fc2): Linear( input features=200, output features=200, bias=True)\\
+(fc3): Linear(input features=200, output features=10, bias=True)\\
+The convolutional neural network is described the following:\\
+(conv1): Conv2d(1, 32, kernel size=(5, 5), stride=(1, 1)) \\
+(conv2): Conv2d(32, 64, kernel size=(5, 5), stride=(1, 1))\\
+(fully connected 1): Linear(input features=1024, output features=512, bias=True)\\
+(fully connected 2): Linear(input features=512, output features=10, bias=True)\\
+\textbf{Dataset} The dataset we choose to examine is MNIST dataset. To simulate the non-IID data distribution
+by setting each client to hold only digits from one certain
+class and the number of clients from the same class to be
+$N=100.$ To simulate the data unbalance, we let the number of
+samples on each client roughly follow a power law (Figure[1.1]) .\\
+\begin{center}
+		\includegraphics[scale=0.2]{random_niid.png}
+		\includegraphics[scale=0.2]{equal.png}
+\end{center}
+		\figurename[1.1]{. Unbalanced (left) and balanced (right) data distribution}\\
+We also take the synthetic data into account. We generated synthetic data with parameters $\alpha , \beta$ where $\alpha$ can be comprehended as the differences between local datas and each other and $\beta$ is how much the local data at each device differs from that of other devices. Namely, The output of each sample can be represented as $y=\text{softmax}(W_kx+b_k)$ with $x,b_k \in \mathbb{R}^{60}$ and $W_k \in \mathbb{R}^{10 \times 60}$. We model each entry of $W_k$ and $b_k$ as $\mathcal{N} (\mu_k,1)$ with $\mu_k \sim \mathcal{N}(0, \alpha)$ and $(x)_{kj} \sim  \mathcal{N}(v_k, 1/j^{1.2})$ with $v_k \sim \mathcal{N}(\mathcal{N}(0, \beta), 1)$.\\
+			\includegraphics[scale=0.15]{sy00iid.png}
+			\includegraphics[scale=0.15]{sy00niid.png}
+			\includegraphics[scale=0.15]{sy11.png}
+			\includegraphics[scale=0.15]{sy0.50.5.png}
+						\figurename[1.2]{. Synthetic data with $(\alpha, \beta) =(0,0)$-iid ,$(\alpha, \beta) =(0,0)$-niid,$(\alpha, \beta) =(1,1)$-niid,$(\alpha, \beta) =(0.5,0.5)$-niid (from left to right)  }\\					
+\textbf{Notation of parameters.}\\
+Number of federated learning rounds: T\\
 Total number of nodes used in the process: K\\
 Fraction of nodes used at each iteration for each node: C\\
 Local batch size used at each learning iteration: B\\
-Other model-dependent parameters can also be tinkered with, such as:\\
-Number of iterations for local training before pooling: $N$
+Number of iterations for local training before pooling: $N$\\
 Local learning rate: $\eta $\\
-The dataset we choose to examine is MNIST dataset. To simulate the non-IID data distribution
-by setting each client to hold only digits from one certain
-class and the number of clients from the same class to be
-N=10. To simulate the data unbalance, we let the number of
-samples on each client roughly follow a normal distribution
-with mean  and variance .\\
-\textbf{Logistic model and 2NN }
-\begin{center}
-	\includegraphics[scale=0.4]{2nn-log.png}	
-	\figurename[2]{. Logistic model and 2 hidden layers NN model}
-\end{center}
+Regularzation parameter: $\lambda$ \\
+\textbf{Set up}. For all experiments the initial weight is $w_0=0$ and each round the selected device run $E$ steps of SGD in parallel. 					\\
 \textbf{Impact of parameters}
+To evaluate the impact of number of devices each update, we examine on Synthetic(0,0) iid (right) and non-iid (left) dataset, $ B=64, T=50,lr=0.01,E=5$, model is 2NN. The value of $C$ in the set $\{5/100,10/100,20/100,50/100\}$. The horizontal axis is the train loss.
 \begin{center}
-		\includegraphics[scale=0.45]{lr.png}
-	\figurename[3]{. Logistic model and 2 hidden layers NN model}
+		\includegraphics[scale=0.5]{Cniid.png}
+			\includegraphics[scale=0.5]{Ciid.png} \\
+	\figurename[3.1]{. Impact of C}
 \end{center}
-\textbf{Impact of balance}
-\begin{thebibliography}{5}
+To evaluate the impact of number of epoch, we examine on MNIST unbalanced non-iid dataset, $C=5/100, B=64, T=50,lr=0.01$, model is CNN. The value of $E$ in the set $\{2,5,10,20\}$. The horizontal axis is the train accuracy.
+\begin{center}
+	\includegraphics[scale=0.65]{E.png}\\
+	\figurename[3.2]{. Impact of E}
+\end{center}
+To evaluate the impact of batch size, we examine on MNIST balanced non-iid dataset, $C=10/100, T=50,lr=0.01$, model is 2NN. The value of $B$ in the set $\{16,32,64,128\}$. The horizontal axis is the test accuracy.
+\begin{center}
+	\includegraphics[scale=0.65]{B.png}\\
+	\figurename[3.3]{. Impact of B}
+\end{center}
+\textbf{Impact of balancedness.} To evaluate the impact unbalancedness, we examine on Synthetic dataset with different parameters $\alpha , \beta$, namely Synthetic data with $(\alpha, \beta) =(0,0)$-iid ,$(\alpha, \beta) =(0,0)$-niid,$(\alpha, \beta) =(1,1)$-niid,$(\alpha, \beta) =(0.5,0.5)$-niid $C=10/100, B=64, T=50,lr=0.01, E=5$, model is CNN. The horizontal axis is the test loss.
+\begin{center}
+		\includegraphics[scale=0.65]{syn.png}\\
+\figurename[3.4]{. Impact of unbalancedness}
+\end{center}
+	\begin{thebibliography}{5}
+	\bibitem{cite0}
+	V. Felbab, P. Kiss, and T. Horváth, (2019), \textit{Optimization in Federated Learning},ITAT 2019
+	
+	
 	\bibitem{cite1}
 	F. Sattler, S. Wiedemann, K. Müller, W. Samek,  (2019), \textit{Robust and communication-efficient federated learning from non-iid data},IEEE transactions on neural networks and learning systems,
 	\bibitem{cite2}
-	H. Brendan McMahan, Eider Moore, Daniel Ramage, (2017)  \textit{Communication-Efficient Learning of Deep Networks
-		from Decentralized Data}, \href{https://arxiv.org/abs/1602.05629}{https://arxiv.org/abs/1602.05629}  
-	\bibitem{cite3}
-	\textit{TensorFlow Federated},\href{ https://github.com/tensorflow/federated }{https://github.com/tensorflow/federated}
-	\bibitem{cite4}
-	\textit{Advanced Machine Learning Systems Course} , (2017),  \href{https://www.cs.cornell.edu/courses/cs6787/2017fa/}{https://www.cs.cornell.edu/courses/cs6787/2017fa/}  	
+	H. Brendan McMahan, Eider Moore, Daniel Ramage, (2017) , \textit{Communication-Efficient Learning of Deep Networks
+		from Decentralized Data}, \href{https://arxiv.org/abs/1602.05629}{https://arxiv.org/abs/1602.05629}	
+	\bibitem{cite31}
+	\textit{On the Convergence of FedAvg on Non-IID Data
+		repository}, \href{ https://github.com/lx10077/fedavgpy }{https://github.com/lx10077/fedavgpy}	
 	\bibitem{cite5}
-	X. Li, K. Huang, W. Yang, S. Wang, Z. Zhang, (2019)  \textit{On the Convergence of FedAvg on Non-IID Data}, \href{https://arxiv.org/abs/1907.02189}{https://arxiv.org/abs/1907.02189}	
+	X. Li, K. Huang, W. Yang, S. Wang, Z. Zhang, (2019),  \textit{On the Convergence of FedAvg on Non-IID Data}, \href{https://arxiv.org/abs/1907.02189}{https://arxiv.org/abs/1907.02189}
+	\bibitem{cite6}
+	J. Konečný, H. B. McMahan, D. Ramage, P. Richtárik, (2016),  \textit{	Federated Optimization Distributed Machine Learning for On-Device Intelligence} \href{https://arxiv.org/abs/1610.02527}{https://arxiv.org/abs/1610.02527}
+	\bibitem{cite7}
+	A. K. Sahu, T. Li, M. Sanjabi, M. Zaheer, A. Talwalkar, and V. Smith, (2018), 
+	\textit{Federated optimization for heterogeneous networks}, \href{https://arxiv.org/abs/1812.06127}{https://arxiv.org/abs/1812.06127}
 \end{thebibliography}
 
-	\section*{Apendix}
-\textbf{Which cases we get poor-quality results when performing the classical FedAvg?} \\
-\begin{theorem}
-	
-\end{theorem}
 \end{document}
