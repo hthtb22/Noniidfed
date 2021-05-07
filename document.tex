@@ -1,0 +1,75 @@
+\documentclass{article} 
+\usepackage{amsmath,amsthm}     
+\usepackage{graphicx}     
+\usepackage{bbm}
+\usepackage{hyperref} 
+\usepackage{url}
+\usepackage{amsfonts} 
+\usepackage{multicol}
+\usepackage{tikz}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[ruled,vlined]{algorithm2e}
+\DeclareMathOperator{\ReLu}{ReLU}
+\DeclareMathOperator{\tridiag}{tridiag}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\arginf}{arg\,inf}
+\usetikzlibrary{positioning,chains,fit,shapes,calc}
+\theoremstyle{theorem}
+\newtheorem{theorem}{Theorem}
+
+\theoremstyle{definition}
+\newtheorem*{definition}{Definition}
+\newtheorem*{remark}{Remark}
+\newtheorem{proposition}{Proposition}
+
+\allowdisplaybreaks
+\usepackage{collectbox}
+\makeatletter
+\newcommand{\mybox}{%
+	\collectbox{%
+		\setlength{\fboxsep}{1pt}%
+		\fbox{\BOXCONTENT}%
+	}%
+}
+\@addtoreset{footnote}{page}
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+	\section{Non IID data}
+	We formally introduce Federated Learning in the context of a $C-$class
+	classification problem, which is defined over a compact feature
+	space $X$ and a label space $Y = [C]$, where $[C]=\{1, \cdots , C.\}$
+	Let $(x, y)$ denote a particular labeled sample. Let $f : X  \rightarrow S$ denote the prediction function, where $S=\{z | \sum_{i=1}^C z_i =1 , z_i \geq 0 \forall i \in [C]\}$. That is, the vector valued function $f$ yields a probability vector $z$ for each sample $x$, where $f_i$ predicts the probability that the sample belongs to the $i-$th class.\\
+	Let the vector $w$ denote model weights. For classification,
+	the commonly used training loss is cross entropy, defined as
+	$$L(w) =\mathbb{E}_{x,y \sim p} [\sum_{i=1}^C \mathbbm{1}_{y=i} \log  f_i(x,w) ]=\sum_{i=1}^{C} p(y=i) \mathbb{E}_{x|y=i}[\log f_i(x,w)] $$
+	The learning problem is to solve the following optimization
+	problem:
+	$$\min_{w} \sum_{i=1}^{C} p(y=i) \mathbb{E}_{x|y=i}[\log f_i(x,w)]$$
+	\textbf{Why Non-IID data is a trouble?}
+	Some recent works show that mose decentralized learning algorithms suffer from major model quality loss (or even divergence) when run on non-IID data partitions. However, it is interesting to note that BSP is robust to Non-IID data.\\
+	It is shown that the accuracy may be affected by the exact data distribution, i.e. the skewness of data distribution. More specifically, the skewness can be roughly interpreted as the distance between the data distribution on each client and the population distribution. In addition, such distance can be evaluated with the earth mover's distance(EMD) between distributions. Based on experiment on real-world dataset, the test accuracy falls sharply with respect to EMD beyond certain threshold. 
+	\section{Non Convex optimization on stochastic gradient descent methods}
+	\subsection{Using local smoothness and maximal nondegeneracy}
+	In general, we optimize the function $f: \mathbb{R^d} \to \mathbb{R}$ with respect to parameter $theta$ $$f(\theta)=\mathbb{E}[F(\theta,X)]$$ where $F: \mathbb{R}^d \times \mathbb{R}^m \to \mathbb{R}$, $\theta$ can be considered as a parameter vector, while $d,m$ are the dimension of the parameter and training examples (resp.). In the above problem,$F = \sum_{i=1}^C \mathbbm{1}_{y=i} \log  f_i(x,w)$. Let us denote $\mathcal{M} = \{\theta = \arginf f\}$ the set of minima of $f$.
+	Assumptions:
+	\begin{itemize}
+		\item $\mathcal{M}$ is locally smooth.
+		\item $f$ is locally three times continous differentiable on the local set of$\mathcal{M}$. And the Hessian matrix of $f$ is maximally non degenerate.
+		\item 
+	\end{itemize}
+Initialization:
+The initial data was sample from the bounded open set $A$ that contains at least one element in local set of $\mathcal{M}$.
+Denote by $\theta_{0}^{k,M,r} : \Omega \to \mathbb{R}^d$ indicates $k$-th sample in the sampling set of size $K$, mini-batch size $M$, and parameter $r>0$ involving to learning parameter. The initial data is uniformly distributed on $A$. i.i.d and independent from $X_{k,m,n}$.\\
+Weights update: $$\theta_{n}^{k,M,r}  =\theta_{n-1}^{k,M,r} -\frac{r}{n^{\rho} M} \left[\sum_{i=1}^{m} \nabla_{\theta}F(\theta_{n-1}^{k,M,r} , X_{k,n,m}) \right] $$
+Mini-batch approximation:
+$$F^{K, \mathfrak{M},n }(\theta , w)= \frac{1}{\mathfrak{M}} \sum_{i=1}^{\mathfrak{M}}  F \left( \theta,  X_{1,n+1,m} (w)\right)$$
+$$\sum_{m=1}^{\mathfrak{M}}F \left(\theta_{n}^{K,M,\mathfrak{M},r} , X_{1,n+1,m}\right) =\min_{k \in [K]} \left[\sum_{m=1}^{\mathfrak{M}}F \left(\theta_{n}^{k,M,r} , X_{1,n+1,m}\right) \right]$$ 
+Theorem: $$\begin{aligned}
+&\mathbb{P}\left( \text{ Distance between} f(\theta_{n}^{k,M,\mathfrak{M},r}) \text{ and minima bigger than }\epsilon \right) \\ &= \mathbb{P}\left(  f(\theta_{n}^{k,M,\mathfrak{M},r}) - \inf_{\theta} f(\theta)\geq \epsilon \right) \\ &\leq \frac{cK}{\epsilon^2 \mathfrak{M}} + \left[ \kappa + c \left(\frac{1}{\epsilon^2 n ^{\rho}}+ \frac{n^{1-p}}{\sqrt{M}}\right)\right]^K \end{aligned}$$
+
+
+\end{document}
