@@ -12,6 +12,7 @@
 \usepackage{hyperref}
 \usepackage[ruled,vlined]{algorithm2e}
 \DeclareMathOperator{\ReLu}{ReLU}
+\DeclareMathOperator{\Avg}{Avg}
 \DeclareMathOperator{\tridiag}{tridiag}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
@@ -70,6 +71,44 @@ $$F^{K, \mathfrak{M},n }(\theta , w)= \frac{1}{\mathfrak{M}} \sum_{i=1}^{\mathfr
 $$\sum_{m=1}^{\mathfrak{M}}F \left(\theta_{n}^{K,M,\mathfrak{M},r} , X_{1,n+1,m}\right) =\min_{k \in [K]} \left[\sum_{m=1}^{\mathfrak{M}}F \left(\theta_{n}^{k,M,r} , X_{1,n+1,m}\right) \right]$$ 
 Theorem: $$\begin{aligned}
 &\mathbb{P}\left( \text{ Distance between} f(\theta_{n}^{k,M,\mathfrak{M},r}) \text{ and minima bigger than }\epsilon \right) \\ &= \mathbb{P}\left(  f(\theta_{n}^{k,M,\mathfrak{M},r}) - \inf_{\theta} f(\theta)\geq \epsilon \right) \\ &\leq \frac{cK}{\epsilon^2 \mathfrak{M}} + \left[ \kappa + c \left(\frac{1}{\epsilon^2 n ^{\rho}}+ \frac{n^{1-p}}{\sqrt{M}}\right)\right]^K \end{aligned}$$
-
-
+ \subsection{Using decomposition of objective function}
+ The problem is finding the optimum solution on the convex set $C$
+ $$\min_{x \in C} f(x) = \min_{x \in C} \{ g(x)-h(x) \} $$
+ Assumptions
+ \begin{itemize}
+ 	\item $f$ is bounded below $C$
+ 	\item $h$ is continuous and convex
+ 	\item $g$ is continuous differentiable and $M_g$ smooth
+ \end{itemize}
+Algorithm
+Initialization. Choose $x_0 \in \int(C)$ , level set of $x_0$ is in $C$.\\
+Update: $x_{k+1}=x_{k} -\alpha (\nabla g(x_k)-u_k$ where $u_k$ is chosen randomly from $\partial h(x_k)$ and learning rate $\alpha \in \left[0, 1/M_g\right]$.\\
+Theorem 
+$f(x_k)$ is strictly decreasing and converges. The limit point is also a critical point of $f$. Moreover, for all $k$, $$\Avg \left(\left\|\nabla f(x_k)\right\|^2_2 \right) \leq \frac{2(f(x_0)-f^{*})}{\alpha (k+1)}$$
+$$\min_{x \in C} f(x) = \min_{x \in C} g(x)-h(x)+ \varphi(x)$$
+\subsection{Using extrapolation}
+Problem $$\min_{x \in \mathbb{R}^d} f(x) = \min_{x \in  \mathbb{R}^d}  \mathbb{E}\left[f\left(x, \xi\right)\right]  $$
+Assumption: \begin{itemize}
+	\item $f(x)$ is $L-$smooth, that means  $$\left\|\nabla f(u)-\nabla f(v) \right\| \leq L \left \| u-v \right\|$$
+	\item There exist $\Delta$ such that $f(x)-f(x_*) \leq \Delta$ for all $x \in \mathbb{R}^d$ where $x_*$ be the global minimum of $f(x)$
+	\item (Bounded variance) $$\mathbb{E} \left[\| \nabla F(x, \xi)-\nabla f(x)\| ^2\right] \le G^2, \ \forall x, \xi $$	
+\end{itemize}
+\begin{algorithm}[H]
+	\SetAlgoLined
+	Initialization $z_0=x_0$ and $g_0=\dfrac{1}{m} \sum_{i=1}^{m} \nabla f(x_0, \xi_{i,0})$\;
+	\For{each round $t=1,2, \cdots ,T$}{
+		$x_t=z_{t-1}- \eta g_{t-1}$ \\
+		$g_t=\dfrac{1}{m}\sum_{i=1}^{m} \nabla f(x_t, \xi_{i,t})$ \\
+		$z_t=z_{t-1} -\eta g_t$
+	} 
+	\caption{Mini batch stochastic gradient descent with extrapolation (Mini-batch SGDE).}
+\end{algorithm}
+Theorem. Chosing the learning rate $\eta \le \frac{1}{12L}$ and 
+$$\min_{t \in \{1, \cdots, T\}} \mathbb{E} \left[ \left\|\nabla f(x_t)\right\|^2 \right] \leq \dfrac{3L\eta G^2}{2T} +\dfrac{8(f(x_0)-f(x_*))}{\eta T}+\dfrac{72G^2}{m}-\dfrac{1}{\eta^2T} \sum_{0}^{T-1} \mathbb{E}\left[\left\|x_{t+1}-x_{t}\right\|^2\right]$$
+\section{}
+\begin{itemize}
+	\item \textbf{$L-$ Lipschitz gradient}: Local objective functions $f_i$ are all $L-$ smooth: $$\left\|\nabla f_i(u)-\nabla f_i(v) \right\| \leq L \left \| u-v \right\|$$	Or it can be rewritten: $$f_i(u) \le f_i(v)+(u-v)^{T} \nabla f_i(v)+\frac{L}{2} \|u-v\|^2$$
+	\item \textbf{Bounded variance} $$\mathbb{E} _{\xi_k \sim D_i} \left[\| \nabla F(w, \xi_k)-\nabla f_k(w)\| ^2\right] \le\sigma ^2, \ \forall k,w $$
+	\item 	\textbf{Bounded gradient} $$\mathbb{E} _{\xi_k \sim D_i} \left[\| \nabla F(w, \xi_k)\| ^2\right] \le G^2, \ \forall k,w $$
+\end{itemize}
 \end{document}
