@@ -11,6 +11,13 @@
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage[ruled,vlined]{algorithm2e}
+\usepackage{geometry}
+\geometry{
+	a4paper,
+	total={160mm,220mm},
+	left=25mm,
+	top=25mm,	
+}
 \DeclareMathOperator{\ReLu}{ReLU}
 \DeclareMathOperator{\Avg}{Avg}
 \DeclareMathOperator{\tridiag}{tridiag}
@@ -20,10 +27,11 @@
 \usetikzlibrary{positioning,chains,fit,shapes,calc}
 \theoremstyle{theorem}
 \newtheorem{theorem}{Theorem}
-
+\newtheorem*{assumption}{Assumption}
 \theoremstyle{definition}
 \newtheorem*{definition}{Definition}
 \newtheorem*{remark}{Remark}
+
 \newtheorem{proposition}{Proposition}
 
 \allowdisplaybreaks
@@ -37,64 +45,107 @@
 }
 \@addtoreset{footnote}{page}
 \makeatother
+\title{Convergence guarantees for gradient descent methods in optimization for non-convex function approximation \\(distributed neural network training). }
+\author{Hoang Trung Hieu}
+\date{May, 2021.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
-	\section{Non IID data}
+	\maketitle
+	\section{Non-IID data analysis}
 	We formally introduce Federated Learning in the context of a $C-$class
 	classification problem, which is defined over a compact feature
 	space $X$ and a label space $Y = [C]$, where $[C]=\{1, \cdots , C.\}$
-	Let $(x, y)$ denote a particular labeled sample. Let $f : X  \rightarrow S$ denote the prediction function, where $S=\{z | \sum_{i=1}^C z_i =1 , z_i \geq 0 \forall i \in [C]\}$. That is, the vector valued function $f$ yields a probability vector $z$ for each sample $x$, where $f_i$ predicts the probability that the sample belongs to the $i-$th class.\\
+	Let $(x, y)$ denote a particular labeled sample. Let $f : X  \rightarrow S$ denote the prediction function, where $S=\{z | \sum_{i=1}^C z_i =1 , z_i \geq 0\  \forall i \in [C]\}$. That is, the vector valued function $f$ yields a probability vector $z$ for each sample $x$, where $f_i$ predicts the probability that the sample belongs to the $i-$th class.\\
 	Let the vector $w$ denote model weights. For classification,
 	the commonly used training loss is cross entropy, defined as
 	$$L(w) =\mathbb{E}_{x,y \sim p} [\sum_{i=1}^C \mathbbm{1}_{y=i} \log  f_i(x,w) ]=\sum_{i=1}^{C} p(y=i) \mathbb{E}_{x|y=i}[\log f_i(x,w)] $$
 	The learning problem is to solve the following optimization
 	problem:
 	$$\min_{w} \sum_{i=1}^{C} p(y=i) \mathbb{E}_{x|y=i}[\log f_i(x,w)]$$
-	\textbf{Why Non-IID data is a trouble?}
-	Some recent works show that mose decentralized learning algorithms suffer from major model quality loss (or even divergence) when run on non-IID data partitions. However, it is interesting to note that BSP is robust to Non-IID data.\\
-	It is shown that the accuracy may be affected by the exact data distribution, i.e. the skewness of data distribution. More specifically, the skewness can be roughly interpreted as the distance between the data distribution on each client and the population distribution. In addition, such distance can be evaluated with the earth mover's distance(EMD) between distributions. Based on experiment on real-world dataset, the test accuracy falls sharply with respect to EMD beyond certain threshold. 
-	\section{Non Convex optimization on stochastic gradient descent methods}
+	\textbf{Why Non-IID data is a trouble?}  
+	Some recent works (\cite{kevin2019noniid}) show that mose decentralized learning algorithms suffer from major model quality loss (or even divergence) when run on non-IID data partitions. However, it is interesting to note that BSP(\cite{bsp}) is robust to Non-IID data.\\
+\begin{center}
+		\includegraphics[scale=0.38]{exp.png}
+\end{center}\\
+	\figurename[1]{. Top-1 validation accuracy for IMAGE CLASSIFICATION over the CIFAR-10 dataset \cite{kevin2019noniid}}\\
+	It is shown that the accuracy may be affected by the exact data distribution, i.e. the skewness of data distribution. More specifically, the skewness can be roughly interpreted as the distance between the data distribution on each client and the population distribution. In addition, such distance can be evaluated with the earth mover's distance(EMD) between distributions. Based on experiment on real-world dataset, the test accuracy falls sharply with respect to EMD beyond certain threshold. \\
+\begin{center}
+		\includegraphics[scale=0.49]{div.png}
+\end{center}\\
+	\figurename[2]{. Ilustration of the weight divergence for federated  learning with-IID and non-IID data \cite{zhao2018federated}}
+	\section{Non Convex optimization on gradient-based methods}
+	In practical, the objective functions arising in
+	the training of neural networks which are expected to be non-convex and it shows rich sets of local minima (we denote by $x^{*}$) and saddle points. It is also has rich of critical points ($0 \in \nabla f(x)$) and first-order stationary points ($\left\|\nabla f(x)\right\|=0$). We will see different gradient-based algorithms with convergence guarantee conditions when the objective are non-convex and even non-smooth in some cases.
 	\subsection{Using local smoothness and maximal nondegeneracy}
-	In general, we optimize the function $f: \mathbb{R^d} \to \mathbb{R}$ with respect to parameter $theta$ $$f(\theta)=\mathbb{E}[F(\theta,X)]$$ where $F: \mathbb{R}^d \times \mathbb{R}^m \to \mathbb{R}$, $\theta$ can be considered as a parameter vector, while $d,m$ are the dimension of the parameter and training examples (resp.). In the above problem,$F = \sum_{i=1}^C \mathbbm{1}_{y=i} \log  f_i(x,w)$. Let us denote $\mathcal{M} = \{\theta = \arginf f\}$ the set of minima of $f$.
-	Assumptions:
+	In general, we optimize the function $f: \mathbb{R^d} \to \mathbb{R}$ with respect to parameter $\theta$ $$f(\theta)=\mathbb{E}[F(\theta,X)]$$ where $F: \mathbb{R}^d \times \mathbb{R}^m \to \mathbb{R}$, $\theta$ can be considered as a parameter vector, while $d,m$ are the dimension of the parameter and training examples (resp.). In the above problem, $F = \sum_{i=1}^C \mathbbm{1}_{y=i} \log  f_i(x,w)$.  We denote $X_{k,m,n}: \Omega \to S$ be iid random variables which satisfy $\mathbb{E} \left[F(\theta, X_{1,1,1})\right]^2 \leq \infty$ where $\Omega$ be a probability space and $S$ be a measurable space . And $f$ be the function such that $f(\theta)=\mathbb{E} \left[F(\theta, X_{1,1,1})\right]$ Let us denote $\mathcal{M} = \{\theta = \arginf f\}$ the set of minima of $f$. 
+	\begin{assumption}
 	\begin{itemize}
-		\item $\mathcal{M}$ is locally smooth.
-		\item $f$ is locally three times continous differentiable on the local set of$\mathcal{M}$. And the Hessian matrix of $f$ is maximally non degenerate.
-		\item 
+		\item $\mathcal{M}$ is locally smooth ( there exists an open set $U \subseteq \mathbb{R}^d$such that $M \cap U$ is a non-empty $\Psi-$dimensional $C^1-$submanifold of $\mathbb{R}^d$).
+		\item $f$ is locally three times continous differentiable on the local set of $\mathcal{M}$. And the Hessian matrix of $f$ is maximally non degenerate. ($\text{rank Hess (f)} ( \theta )=  d - \Psi = codim (M \cap U)$)
 	\end{itemize}
-Initialization:
-The initial data was sample from the bounded open set $A$ that contains at least one element in local set of $\mathcal{M}$.
+\end{assumption}
+\textbf{Algorithm.} Initialization:
+The initial data was sample from the bounded open set $A \subseteq \mathbb{R}^d$ that contains at least one element in local set of $\mathcal{M}$.
 Denote by $\theta_{0}^{k,M,r} : \Omega \to \mathbb{R}^d$ indicates $k$-th sample in the sampling set of size $K$, mini-batch size $M$, and parameter $r>0$ involving to learning parameter. The initial data is uniformly distributed on $A$. i.i.d and independent from $X_{k,m,n}$.\\
-Weights update: $$\theta_{n}^{k,M,r}  =\theta_{n-1}^{k,M,r} -\frac{r}{n^{\rho} M} \left[\sum_{i=1}^{m} \nabla_{\theta}F(\theta_{n-1}^{k,M,r} , X_{k,n,m}) \right] $$
-Mini-batch approximation:
+Weights update: We compute independent solutions to SGD in the way $$\theta_{n}^{k,M,r}  =\theta_{n-1}^{k,M,r} -\frac{r}{n^{\rho} M} \left[\sum_{i=1}^{m} \nabla_{\theta}F(\theta_{n-1}^{k,M,r} , X_{k,n,m}) \right] $$
+Mini-batch approximation: (\cite{ghadimi2013minibatch}) $F^{K, \mathfrak{M},n }: \mathbb{R}^d \times \Omega \to \mathbb{R}$ is approximated as
 $$F^{K, \mathfrak{M},n }(\theta , w)= \frac{1}{\mathfrak{M}} \sum_{i=1}^{\mathfrak{M}}  F \left( \theta,  X_{1,n+1,m} (w)\right)$$
-$$\sum_{m=1}^{\mathfrak{M}}F \left(\theta_{n}^{K,M,\mathfrak{M},r} , X_{1,n+1,m}\right) =\min_{k \in [K]} \left[\sum_{m=1}^{\mathfrak{M}}F \left(\theta_{n}^{k,M,r} , X_{1,n+1,m}\right) \right]$$ 
-Theorem: $$\begin{aligned}
-&\mathbb{P}\left( \text{ Distance between} f(\theta_{n}^{k,M,\mathfrak{M},r}) \text{ and minima bigger than }\epsilon \right) \\ &= \mathbb{P}\left(  f(\theta_{n}^{k,M,\mathfrak{M},r}) - \inf_{\theta} f(\theta)\geq \epsilon \right) \\ &\leq \frac{cK}{\epsilon^2 \mathfrak{M}} + \left[ \kappa + c \left(\frac{1}{\epsilon^2 n ^{\rho}}+ \frac{n^{1-p}}{\sqrt{M}}\right)\right]^K \end{aligned}$$
+After that, we identify the value that minimizes $F^{K, \mathfrak{M},n }$ in the sense that we compute a random variable $\theta_{n}^{K,M,\mathfrak{M},r} : \Omega \to \mathbb{R}^d$ which satisfies that
+$$\sum_{m=1}^{\mathfrak{M}}F \left(\theta_{n}^{K,M,\mathfrak{M},r} , X_{1,n+1,m}\right) =\min_{k \in [K]} \left[\sum_{m=1}^{\mathfrak{M}}F \left(\theta_{n}^{k,M,r} , X_{1,n+1,m}\right) \right]$$
+\begin{theorem} \cite{fehrman2019convergence}After running the above algorithm with $p \in (2/3;1)$. There exist $\tau ,c >0$ , $\kappa \in (0,1)$ such that for every $n,k,M,\mathfrak{M},r \in (0 , \tau)$ , $\epsilon \in (0,1)$ we get
+ $$\begin{aligned}
+&\mathbb{P}\left( \text{ Distance between} f(\theta_{n}^{k,M,\mathfrak{M},r}) \text{ and minima bigger than }\epsilon \right) \\ &= \mathbb{P}\left(  f(\theta_{n}^{k,M,\mathfrak{M},r}) - \inf_{\theta} f(\theta)\geq \epsilon \right) \leq \frac{cK}{\epsilon^2 \mathfrak{M}} + \left[ \kappa + c \left(\frac{1}{\epsilon^2 n ^{\rho}}+ \frac{n^{1-p}}{\sqrt{M}}\right)\right]^K \end{aligned}$$
+\end{theorem}
+The conditions we used in this algorithm are satisfied by a four-parameter affine-linear network with a linear activation function and the case of a two-parameter network with the ReLU activation function. \cite{fehrman2019convergence}
  \subsection{Using decomposition of objective function}
- The problem is finding the optimum solution on the convex set $C$
+ The next problem is finding the optimum solution on the convex set $C$
  $$\min_{x \in C} f(x) = \min_{x \in C} \{ g(x)-h(x) \} $$
- Assumptions
+ \begin{assumption}
  \begin{itemize}
  	\item $f$ is bounded below $C$
  	\item $h$ is continuous and convex
  	\item $g$ is continuous differentiable and $M_g$ smooth
- \end{itemize}
-Algorithm
-Initialization. Choose $x_0 \in \int(C)$ , level set of $x_0$ is in $C$.\\
-Update: $x_{k+1}=x_{k} -\alpha (\nabla g(x_k)-u_k$ where $u_k$ is chosen randomly from $\partial h(x_k)$ and learning rate $\alpha \in \left[0, 1/M_g\right]$.\\
-Theorem 
-$f(x_k)$ is strictly decreasing and converges. The limit point is also a critical point of $f$. Moreover, for all $k$, $$\Avg \left(\left\|\nabla f(x_k)\right\|^2_2 \right) \leq \frac{2(f(x_0)-f^{*})}{\alpha (k+1)}$$
-$$\min_{x \in C} f(x) = \min_{x \in C} g(x)-h(x)+ \varphi(x)$$
+ \end{itemize} \end{assumption}
+\begin{algorithm}[H]
+	\SetAlgoLined \DontPrintSemicolon
+	Initialization. Choose $x_0 \in \int(C)$ , level set of $x_0$ is in $C$. \;
+	\For{each round $k=1,2, \cdots ,T$}{
+		Update: $x_{k+1}=x_{k} -\alpha (\nabla g(x_k)-u_k)$ where $u_k$ is chosen randomly from $\partial h(x_k)$ and learning rate $\alpha \in \left[0, 1/M_g\right]$.
+	} 
+	\caption{Subgradient-type method.}
+\end{algorithm}
+\begin{theorem}\cite{khamaru2018convergence}
+$f(x_k)$ is strictly decreasing and converges. The limit point of $x_k$ is also a critical point of $f$. Moreover, for all $k$, $$\Avg \left(\left\|\nabla f(x_k)\right\|^2_2 \right) \leq \frac{2(f(x_0)-f(x*))}{(k+1)}$$ \end{theorem}
+We now turn to a more general class of optimization problems of the form
+$$\min_{x \in \mathbb{R}^d} f(x) = \min_{x \in \mathbb{R}^d} g(x)-h(x)+ \varphi(x)$$
+\begin{assumption}
+	\begin{itemize}
+		\item $f$ is bounded below $\mathbb{R}^d$.
+		\item $h$ is continuous and convex.
+		\item $g$ is continuous differentiable and $M_g-$smooth.
+		\item $\varphi$ is proper, convex and lower semi-continuous.
+\end{itemize} \end{assumption}
+\begin{algorithm}[H]
+	\SetAlgoLined \DontPrintSemicolon
+	Initialization. Choose $x_0 \in dom(f)$ and learning rate $\alpha \in \left[0, 1/M_g\right]$. \;
+	\For{each round $k=1,2, \cdots ,T$}{
+		Update: $x_{k+1}=prox_{1/\alpha \varphi }(x_{k} -\alpha (\nabla g(x_k)-u_k))$ where $u_k$ is chosen randomly from $\partial h(x_k)$
+	} 
+	\caption{Proximal-type algorithm.}
+\end{algorithm}
+Here the notion $prox_{\lambda f}(v) = \argmin_{x} \left(f(x)+\frac{1}{2 \lambda} \left\|x-v\right\|_2^2\right)$
+\begin{theorem}\cite{khamaru2018convergence}
+	$f(x_k)$ is strictly decreasing and converges. The limit point of $x_k$ is also a critical point of $f$. Moreover, for all $k$, $$\Avg \left(\left\|\nabla x_k -x_{k-1}\right\|^2_2 \right) \leq \frac{2 \alpha (f(x_0)-f(x^*))}{\alpha (k+1)}$$ \end{theorem}
+In 2 algorithms we introduced above, the objective may be non convex or non smooth. But the problem is how we could decompose the objective function into components. 
 \subsection{Using extrapolation}
 Problem $$\min_{x \in \mathbb{R}^d} f(x) = \min_{x \in  \mathbb{R}^d}  \mathbb{E}\left[f\left(x, \xi\right)\right]  $$
-Assumption: \begin{itemize}
+\begin{assumption} \begin{itemize}
 	\item $f(x)$ is $L-$smooth, that means  $$\left\|\nabla f(u)-\nabla f(v) \right\| \leq L \left \| u-v \right\|$$
 	\item There exist $\Delta$ such that $f(x)-f(x_*) \leq \Delta$ for all $x \in \mathbb{R}^d$ where $x_*$ be the global minimum of $f(x)$
 	\item (Bounded variance) $$\mathbb{E} \left[\| \nabla F(x, \xi)-\nabla f(x)\| ^2\right] \le G^2, \ \forall x, \xi $$	
-\end{itemize}
+\end{itemize} \end{assumption}
 \begin{algorithm}[H]
-	\SetAlgoLined
+	\SetAlgoLined\DontPrintSemicolon
 	Initialization $z_0=x_0$ and $g_0=\dfrac{1}{m} \sum_{i=1}^{m} \nabla f(x_0, \xi_{i,0})$\;
 	\For{each round $t=1,2, \cdots ,T$}{
 		$x_t=z_{t-1}- \eta g_{t-1}$ \\
@@ -103,12 +154,40 @@ Assumption: \begin{itemize}
 	} 
 	\caption{Mini batch stochastic gradient descent with extrapolation (Mini-batch SGDE).}
 \end{algorithm}
-Theorem. Chosing the learning rate $\eta \le \frac{1}{12L}$ and 
-$$\min_{t \in \{1, \cdots, T\}} \mathbb{E} \left[ \left\|\nabla f(x_t)\right\|^2 \right] \leq \dfrac{3L\eta G^2}{2T} +\dfrac{8(f(x_0)-f(x_*))}{\eta T}+\dfrac{72G^2}{m}-\dfrac{1}{\eta^2T} \sum_{0}^{T-1} \mathbb{E}\left[\left\|x_{t+1}-x_{t}\right\|^2\right]$$
-\section{}
-\begin{itemize}
-	\item \textbf{$L-$ Lipschitz gradient}: Local objective functions $f_i$ are all $L-$ smooth: $$\left\|\nabla f_i(u)-\nabla f_i(v) \right\| \leq L \left \| u-v \right\|$$	Or it can be rewritten: $$f_i(u) \le f_i(v)+(u-v)^{T} \nabla f_i(v)+\frac{L}{2} \|u-v\|^2$$
-	\item \textbf{Bounded variance} $$\mathbb{E} _{\xi_k \sim D_i} \left[\| \nabla F(w, \xi_k)-\nabla f_k(w)\| ^2\right] \le\sigma ^2, \ \forall k,w $$
-	\item 	\textbf{Bounded gradient} $$\mathbb{E} _{\xi_k \sim D_i} \left[\| \nabla F(w, \xi_k)\| ^2\right] \le G^2, \ \forall k,w $$
-\end{itemize}
+\begin{theorem} \cite{xu2019convergence} Chosing the learning rate $\eta \le \frac{1}{12L}$ and 
+$$\min_{t \in \{1, \cdots, T\}} \mathbb{E} \left[ \left\|\nabla f(x_t)\right\|^2 \right] \leq \dfrac{3L\eta G^2}{2T} +\dfrac{8(f(x_0)-f(x_*))}{\eta T}+\dfrac{72G^2}{m}-\dfrac{1}{\eta^2T} \sum_{0}^{T-1} \mathbb{E}\left[\left\|x_{t+1}-x_{t}\right\|^2\right]$$ \end{theorem}
+\begin{assumption} \begin{itemize}
+	\item $f(x)$ is $L-$smooth.
+	\item There exist $\Delta$ such that $f(x)-f(x_*) \leq \Delta$ for all $x \in \mathbb{R}^d$ where $x_*$ be the global minimum of $f(x)$.
+	\item $f(x, \xi)$ is differentiable.
+	\item (Bounded variance) $\mathbb{E} \left[\| \nabla F(x, \xi)-\nabla f(x)\| ^2\right] \le G^2, \ \forall x, \xi $	
+\end{itemize} \end{assumption}
+\begin{algorithm}[H]
+	\SetAlgoLined\DontPrintSemicolon
+	\SetKwFunction{StagewiseSGDE}{StagewiseSGDE}\SetKwFunction{SGDE}{SGDE}
+	\SetKwProg{myalg}{Algorithm}{}{}
+	\myalg{\StagewiseSGDE{}}{
+		\nl Initialization. $x^0 =x_0$ \;
+		\nl \For{$s=1 , \cdots, S$}{$f_s(x)=f(x)+\frac{1}{2 \gamma} \left\|x-x^{s-1}\right\|^2$ \\ $x^s$= \SGDE{$x^{s-1}, f_s, \eta_s, T_s$}} 		 
+		\nl \KwRet $x_{\tau}$ where $\tau$ is chosen from $1, \cdots, S$ with probability $\mathbb{P} (\tau =i )= \frac{w_{i}}{\sum _{j=1}^{s}w_s}$  \;}{}
+	\setcounter{AlgoLine}{0}
+	\SetKwProg{myproc}{Procedure}{}{}
+	\myproc{\SGDE{$x_0, f, \eta, T$}}{
+		\nl Initialization. $z_0=x_0 ; g_0=\nabla f(x_0, \xi_{0})$\;
+		\nl \For{each round $t=1,2, \cdots ,T$}{
+			$x_t=z_{t-1}- \eta g_{t-1}$ \\
+			$g_t= \nabla f(x_t, \xi_{t})$ \\
+			$z_t=z_{t-1} -\eta g_t$
+		} 		
+		\nl \KwRet $\hat{x_t}=\frac{1}{T} \sum_{t=1}^{T}x_t$\;}
+	\caption{Stagewise SGDE}
+\end{algorithm} 
+\begin{theorem} \cite{xu2019convergence}
+ After running Stagewise SGDE with $\gamma= 1/4L; w_s=s^\alpha \ (\alpha >1)$ and choosing the learning parameter and the number of iteration at $s-$stage as follow: $\eta_s=\frac{c \gamma}{3s} \leq \frac{1}{2L} \frac{\gamma}{3}$ and $T_s=\frac{36s}{c}$, we got the estimation:
+$$\mathbb{E} \left[ \left\|\nabla f(x_{\tau})\right\|^2 \right] \leq \dfrac{20 \Delta(\alpha +1)}{\gamma (S+1)}+\dfrac{480G^2c(\alpha +1)}{S+1}-\dfrac{60 \sum_{s=1}^{S+1}w_s D_{T_s}}{\gamma \sum_{s=1}^{S+1}w_s}$$ where $D_{T_s}=\dfrac{1}{16T_s \eta_s} \sum_{t=1}^{T_s} \left\|x_t -x_{t-1}\right\|^2$. If we expect $\mathbb{E} \left[ \left\|\nabla f(x_{\tau})\right\|^2 \right] \leq \epsilon^2$, the number of stage should be $O(1/\epsilon^2)$.
+\end{theorem}
+%\section{}
+%\begin{itemize}\item \textbf{$L-$ Lipschitz gradient}: Local objective functions $f_i$ are all $L-$ smooth: $$\left\|\nabla f_i(u)-\nabla f_i(v) \right\| \leq L \left \| u-v \right\|$$	Or it can be rewritten: $$f_i(u) \le f_i(v)+(u-v)^{T} \nabla f_i(v)+\frac{L}{2} \|u-v\|^2$$	\item \textbf{Bounded variance} $$\mathbb{E} _{\xi_k \sim D_i} \left[\| \nabla F(w, \xi_k)-\nabla f_k(w)\| ^2\right] \le\sigma ^2, \ \forall k,w $$	\item 	\textbf{Bounded gradient} $$\mathbb{E} _{\xi_k \sim D_i} \left[\| \nabla F(w, \xi_k)\| ^2\right] \le G^2, \ \forall k,w $$\end{itemize}
+\bibliographystyle{plain}
+\bibliography{references}
 \end{document}
